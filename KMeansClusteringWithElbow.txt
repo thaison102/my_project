@@ -1,0 +1,71 @@
+##lib
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans 
+
+##read
+import os
+df=pd.read_csv('data.csv')
+
+##describe
+df.describe
+df.plot(kind='scatter',x='Experience',y='Age')
+df.corr()
+
+##Preprocessing
+df=df.drop('Nationality', axis =1)
+df=df.drop('Rank', axis =1)
+df=df.drop('Go', axis =1)
+df
+
+#Standard with z
+sc=StandardScaler()
+df_stand=sc.fit_transform(df)
+df_stand
+##Convert
+df_stand=pd.DataFrame(df_stand,columns=['Age','Experience'])
+
+df_stand.plot(kind='scatter',x='Age',y='Experience')
+plt.show()
+
+##Elbow
+Sum_of_squared_distances=[]
+K=range(1,13)
+for k in K:
+    km=KMeans(n_clusters=k)
+    km=km.fit(df_stand)
+    Sum_of_squared_distances.append(km.inertia_)
+
+#Plot
+plt.plot(K,Sum_of_squared_distances,'bx-')
+plt.xlabel('k')
+plt.ylabel('Sum_of_squared_distances')
+plt.title('Elbow Method for Optimal k')
+plt.show()
+#choose k=3
+
+km3=KMeans(n_clusters=3)
+km3=km3.fit(df)
+print(km3.labels_) ##phần tử thuộc lần lượt các nhóm:
+
+labels=km3.labels_
+labels=pd.DataFrame(labels,columns=['cluster'])
+df_cluster=pd.concat([df,labels],axis=1)
+##SX
+df_cluster.sort_values('cluster',ascending=True) 
+print(km3.labels_)
+df_cluster.groupby('cluster').size()
+df_cluster.groupby('cluster').describe
+
+##Centroid
+centroids=km3.cluster_centers_
+centroids=pd.DataFrame(centroids,columns=['Experience','Age'])
+centroids
+
+import seaborn as sns
+s1=sns.scatterplot(data=df_cluster,x='Experience',y='Age',hue='cluster')
+
+##Predict
+clu_predict=km3.predict([[19,35],[2,20],[10,29]])
+print(clu_predict)
